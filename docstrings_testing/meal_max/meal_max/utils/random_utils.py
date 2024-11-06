@@ -8,7 +8,7 @@ configure_logger(logger)
 
 
 def get_random() -> float:
-        """
+    """
     Fetches a random number between 1 and 0 from random.org.
 
     Returns:
@@ -18,7 +18,7 @@ def get_random() -> float:
         RuntimeError: If the request to random.org fails or returns an invalid response.
         ValueError: If the response from random.org is not a valid float.
     """
-    url = "https://www.random.org/decimal-fractions/?num=1&dec=2&col=1&format=plain&rnd=new"
+    url = f"https://www.random.org/decimal-fractions/?num=1&dec=2&col=1&format=plain&rnd=new"
 
     try:
         # Log the request to random.org
@@ -32,11 +32,11 @@ def get_random() -> float:
         random_number_str = response.text.strip()
 
         try:
-            random_number = float(random_number_str)
+            random_number = int(random_number_str)
         except ValueError:
             raise ValueError("Invalid response from random.org: %s" % random_number_str)
 
-        logger.info("Received random number: %.3f", random_number)
+        logger.info("Received random decimal: %.3f", random_number)
         return random_number
 
     except requests.exceptions.Timeout:
@@ -46,3 +46,5 @@ def get_random() -> float:
     except requests.exceptions.RequestException as e:
         logger.error("Request to random.org failed: %s", e)
         raise RuntimeError("Request to random.org failed: %s" % e)
+
+    
