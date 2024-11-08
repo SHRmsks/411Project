@@ -30,9 +30,9 @@ def get_random() -> float:
         response.raise_for_status()
 
         random_number_str = response.text.strip()
-
+        print("random_number_str", random_number_str)
         try:
-            random_number = int(random_number_str)
+            random_number = float(random_number_str)
         except ValueError:
             raise ValueError("Invalid response from random.org: %s" % random_number_str)
 
