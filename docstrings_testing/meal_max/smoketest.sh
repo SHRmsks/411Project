@@ -53,108 +53,76 @@ check_db() {
 #
 ##########################################################
 
-clear_catalog() {
-  echo "Clearing the playlist..."
-  curl -s -X DELETE "$BASE_URL/clear-catalog" | grep -q '"status": "success"'
+clear_meals() {
+  echo "Clearing the meal list..."
+  curl -s -X DELETE "$BASE_URL/clear-meals" | grep -q '"status": "success"'
 }
 
-create_song() {
-  artist=$1
-  title=$2
-  year=$3
-  genre=$4
-  duration=$5
+create_meal() {
+  meal=$1
+  cuisine=$2
+  price=$3
+  difficulty=$4
 
-  echo "Adding song ($artist - $title, $year) to the playlist..."
-  curl -s -X POST "$BASE_URL/create-song" -H "Content-Type: application/json" \
-    -d "{\"artist\":\"$artist\", \"title\":\"$title\", \"year\":$year, \"genre\":\"$genre\", \"duration\":$duration}" | grep -q '"status": "success"'
+  echo "Adding meal ($meal, $cuisine, $price, $difficulty) to the meal list..."
+  curl -s -X POST "$BASE_URL/create-meal" -H "Content-Type: application/json" \
+    -d "{\"meal\":\"$meal\", \"cuisine\":\"$cuisine\", \"price\":$price, \"difficulty\":\"$difficulty\"}" | grep -q '"status": "success"'
 
   if [ $? -eq 0 ]; then
-    echo "Song added successfully."
+    echo "meal added successfully."
   else
-    echo "Failed to add song."
+    echo "Failed to add meal."
     exit 1
   fi
 }
 
-delete_song_by_id() {
-  song_id=$1
+delete_meal() {
+  meal_id=$1
 
-  echo "Deleting song by ID ($song_id)..."
-  response=$(curl -s -X DELETE "$BASE_URL/delete-song/$song_id")
+  echo "Deleting meal by ID ($meal_id)..."
+  response=$(curl -s -X DELETE "$BASE_URL/delete-meal/$meal_id")
   if echo "$response" | grep -q '"status": "success"'; then
-    echo "Song deleted successfully by ID ($song_id)."
+    echo "Meal deleted successfully by ID ($meal_id)."
   else
-    echo "Failed to delete song by ID ($song_id)."
+    echo "Failed to delete meal by ID ($meal_id)."
     exit 1
   fi
 }
 
-get_all_songs() {
-  echo "Getting all songs in the playlist..."
-  response=$(curl -s -X GET "$BASE_URL/get-all-songs-from-catalog")
+get_leaderboard() {
+  sort_by=$1
+
+  echo "Getting all meals in the leaderboard..."
+  response=$(curl -s -X GET "$BASE_URL/leaderboard?sort=$sort_by")
   if echo "$response" | grep -q '"status": "success"'; then
-    echo "All songs retrieved successfully."
+    echo "Leaderboard retrieved successfully."
     if [ "$ECHO_JSON" = true ]; then
-      echo "Songs JSON:"
+      echo "Meals JSON:"
       echo "$response" | jq .
     fi
   else
-    echo "Failed to get songs."
+    echo "Failed to get meals."
     exit 1
   fi
 }
 
-get_song_by_id() {
-  song_id=$1
+get_meal_by_id() {
+  meal_id=$1
 
-  echo "Getting song by ID ($song_id)..."
-  response=$(curl -s -X GET "$BASE_URL/get-song-from-catalog-by-id/$song_id")
+  echo "Getting meal by ID ($meal_id)..."
+  response=$(curl -s -X GET "$BASE_URL/get-meal-by-id/$meal_id")
   if echo "$response" | grep -q '"status": "success"'; then
-    echo "Song retrieved successfully by ID ($song_id)."
+    echo "Meal retrieved successfully by ID ($meal_id)."
     if [ "$ECHO_JSON" = true ]; then
-      echo "Song JSON (ID $song_id):"
+      echo "Meal JSON (ID $meal_id):"
       echo "$response" | jq .
     fi
   else
-    echo "Failed to get song by ID ($song_id)."
+    echo "Failed to get meal by ID ($meal_id)."
     exit 1
   fi
 }
 
-get_song_by_compound_key() {
-  artist=$1
-  title=$2
-  year=$3
-
-  echo "Getting song by compound key (Artist: '$artist', Title: '$title', Year: $year)..."
-  response=$(curl -s -X GET "$BASE_URL/get-song-from-catalog-by-compound-key?artist=$(echo $artist | sed 's/ /%20/g')&title=$(echo $title | sed 's/ /%20/g')&year=$year")
-  if echo "$response" | grep -q '"status": "success"'; then
-    echo "Song retrieved successfully by compound key."
-    if [ "$ECHO_JSON" = true ]; then
-      echo "Song JSON (by compound key):"
-      echo "$response" | jq .
-    fi
-  else
-    echo "Failed to get song by compound key."
-    exit 1
-  fi
-}
-
-get_random_song() {
-  echo "Getting a random song from the catalog..."
-  response=$(curl -s -X GET "$BASE_URL/get-random-song")
-  if echo "$response" | grep -q '"status": "success"'; then
-    echo "Random song retrieved successfully."
-    if [ "$ECHO_JSON" = true ]; then
-      echo "Random Song JSON:"
-      echo "$response" | jq .
-    fi
-  else
-    echo "Failed to get a random song."
-    exit 1
-  fi
-}
 
 
 ############################################################
@@ -163,37 +131,35 @@ get_random_song() {
 #
 ############################################################
 
-add_song_to_playlist() {
-  artist=$1
-  title=$2
-  year=$3
+prep_combatant() {
+  meal=$1
 
-  echo "Adding song to playlist: $artist - $title ($year)..."
-  response=$(curl -s -X POST "$BASE_URL/add-song-to-playlist" \
+  echo "Prepping Meal for battle: $meal ..."
+  response=$(curl -s -X POST "$BASE_URL/prep-combatant/$meal" \
     -H "Content-Type: application/json" \
-    -d "{\"artist\":\"$artist\", \"title\":\"$title\", \"year\":$year}")
+    -d "{\"meal\":\"$meal\"}")
 
   if echo "$response" | grep -q '"status": "success"'; then
-    echo "Song added to playlist successfully."
+    echo "Meal prepared successfully."
     if [ "$ECHO_JSON" = true ]; then
-      echo "Song JSON:"
+      echo "Meal JSON:"
       echo "$response" | jq .
     fi
   else
-    echo "Failed to add song to playlist."
+    echo "Failed to prepare Meal."
     exit 1
   fi
 }
 
 remove_song_from_playlist() {
-  artist=$1
-  title=$2
-  year=$3
+  meal=$1
+  cuisine=$2
+  price=$3
 
-  echo "Removing song from playlist: $artist - $title ($year)..."
+  echo "Removing song from playlist: $meal - $cuisine ($price)..."
   response=$(curl -s -X DELETE "$BASE_URL/remove-song-from-playlist" \
     -H "Content-Type: application/json" \
-    -d "{\"artist\":\"$artist\", \"title\":\"$title\", \"year\":$year}")
+    -d "{\"meal\":\"$meal\", \"cuisine\":\"$cuisine\", \"price\":$price}")
 
   if echo "$response" | grep -q '"status": "success"'; then
     echo "Song removed from playlist successfully."
@@ -221,14 +187,14 @@ remove_song_by_track_number() {
   fi
 }
 
-clear_playlist() {
-  echo "Clearing playlist..."
-  response=$(curl -s -X POST "$BASE_URL/clear-playlist")
+clear_combatants() {
+  echo "Clearing combatants..."
+  response=$(curl -s -X POST "$BASE_URL/clear-combatants")
 
   if echo "$response" | grep -q '"status": "success"'; then
-    echo "Playlist cleared successfully."
+    echo "Combatants cleared successfully."
   else
-    echo "Failed to clear playlist."
+    echo "Failed to clear combatants."
     exit 1
   fi
 }
@@ -372,14 +338,14 @@ play_rest_of_playlist() {
 ############################################################
 
 move_song_to_beginning() {
-  artist=$1
-  title=$2
-  year=$3
+  meal=$1
+  cuisine=$2
+  price=$3
 
-  echo "Moving song ($artist - $title, $year) to the beginning of the playlist..."
+  echo "Moving song ($meal - $cuisine, $price) to the beginning of the playlist..."
   response=$(curl -s -X POST "$BASE_URL/move-song-to-beginning" \
     -H "Content-Type: application/json" \
-    -d "{\"artist\": \"$artist\", \"title\": \"$title\", \"year\": $year}")
+    -d "{\"meal\": \"$meal\", \"cuisine\": \"$cuisine\", \"price\": $price}")
 
   if echo "$response" | grep -q '"status": "success"'; then
     echo "Song moved to the beginning successfully."
@@ -390,14 +356,14 @@ move_song_to_beginning() {
 }
 
 move_song_to_end() {
-  artist=$1
-  title=$2
-  year=$3
+  meal=$1
+  cuisine=$2
+  price=$3
 
-  echo "Moving song ($artist - $title, $year) to the end of the playlist..."
+  echo "Moving song ($meal - $cuisine, $price) to the end of the playlist..."
   response=$(curl -s -X POST "$BASE_URL/move-song-to-end" \
     -H "Content-Type: application/json" \
-    -d "{\"artist\": \"$artist\", \"title\": \"$title\", \"year\": $year}")
+    -d "{\"meal\": \"$meal\", \"cuisine\": \"$cuisine\", \"price\": $price}")
 
   if echo "$response" | grep -q '"status": "success"'; then
     echo "Song moved to the end successfully."
@@ -408,15 +374,15 @@ move_song_to_end() {
 }
 
 move_song_to_track_number() {
-  artist=$1
-  title=$2
-  year=$3
+  meal=$1
+  cuisine=$2
+  price=$3
   track_number=$4
 
-  echo "Moving song ($artist - $title, $year) to track number ($track_number)..."
+  echo "Moving song ($meal - $cuisine, $price) to track number ($track_number)..."
   response=$(curl -s -X POST "$BASE_URL/move-song-to-track-number" \
     -H "Content-Type: application/json" \
-    -d "{\"artist\": \"$artist\", \"title\": \"$title\", \"year\": $year, \"track_number\": $track_number}")
+    -d "{\"meal\": \"$meal\", \"cuisine\": \"$cuisine\", \"price\": $price, \"track_number\": $track_number}")
 
   if echo "$response" | grep -q '"status": "success"'; then
     echo "Song moved to track number ($track_number) successfully."
@@ -470,29 +436,26 @@ get_song_leaderboard() {
 check_health
 check_db
 
-# Clear the catalog
-clear_catalog
+clear_meals
+# Create meals
+create_meal "Chicken Parm" "Italian" 10.0 "HIGH"
+create_meal "Pizza" "Italian" 12.0 "MED"
+create_meal "Tacos" "Mexican" 8.0 "MED"
+create_meal "Sandwich" "American" 8.4 "LOW"
+create_meal "Steak" "Japanese" 43.5 "HIGH"
 
-# Create songs
-create_song "The Beatles" "Hey Jude" 1968 "Rock" 180
-create_song "The Rolling Stones" "Paint It Black" 1966 "Rock" 180
-create_song "The Beatles" "Let It Be" 1970 "Rock" 180
-create_song "Queen" "Bohemian Rhapsody" 1975 "Rock" 180
-create_song "Led Zeppelin" "Stairway to Heaven" 1971 "Rock" 180
+delete_meal 1
+get_leaderboard 'wins'
 
-delete_song_by_id 1
-get_all_songs
+get_meal_by_id 2
+get_meal_by_id 3
+get_meal_by_id 4
 
-get_song_by_id 2
-get_song_by_compound_key "The Beatles" "Let It Be" 1970
-get_random_song
+clear_combatants
+prep_combatant "Chicken Parm"
+prep_combatant "Pizza" 
 
-clear_playlist
 
-add_song_to_playlist "The Rolling Stones" "Paint It Black" 1966
-add_song_to_playlist "Queen" "Bohemian Rhapsody" 1975
-add_song_to_playlist "Led Zeppelin" "Stairway to Heaven" 1971
-add_song_to_playlist "The Beatles" "Let It Be" 1970
 
 remove_song_from_playlist "The Beatles" "Let It Be" 1970
 remove_song_by_track_number 2
