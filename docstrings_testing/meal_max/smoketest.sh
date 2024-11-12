@@ -59,14 +59,15 @@ clear_meals() {
 }
 
 create_meal() {
+  id=$0
   meal=$1
   cuisine=$2
   price=$3
   difficulty=$4
 
-  echo "Adding meal ($meal, $cuisine, $price, $difficulty) to the meal list..."
+  echo "Adding meal ($id, $meal, $cuisine, $price, $difficulty) to the meal list..."
   curl -s -X POST "$BASE_URL/create-meal" -H "Content-Type: application/json" \
-    -d "{\"meal\":\"$meal\", \"cuisine\":\"$cuisine\", \"price\":$price, \"difficulty\":\"$difficulty\"}" | grep -q '"status": "success"'
+    -d "{\"id\":\"$id\",\"meal\":\"$meal\", \"cuisine\":\"$cuisine\", \"price\":$price, \"difficulty\":\"$difficulty\"}" | grep -q '"status": "success"'
 
   if [ $? -eq 0 ]; then
     echo "meal added successfully."
@@ -127,7 +128,7 @@ get_meal_by_id() {
 
 ############################################################
 #
-# Playlist Management
+# Combatant System Management
 #
 ############################################################
 
@@ -151,38 +152,39 @@ prep_combatant() {
   fi
 }
 
-remove_song_from_playlist() {
+remove_meal_from_list() {
+  id= $0
   meal=$1
   cuisine=$2
   price=$3
 
   echo "Removing song from playlist: $meal - $cuisine ($price)..."
-  response=$(curl -s -X DELETE "$BASE_URL/remove-song-from-playlist" \
+  response=$(curl -s -X DELETE "$BASE_URL/remove-meal-from-list" \
     -H "Content-Type: application/json" \
-    -d "{\"meal\":\"$meal\", \"cuisine\":\"$cuisine\", \"price\":$price}")
+    -d "{\"id\":\"$id\",\"meal\":\"$meal\", \"cuisine\":\"$cuisine\", \"price\":$price}")
 
   if echo "$response" | grep -q '"status": "success"'; then
-    echo "Song removed from playlist successfully."
+    echo "Meal has been removed from list successfully."
     if [ "$ECHO_JSON" = true ]; then
-      echo "Song JSON:"
+      echo "Meal JSON:"
       echo "$response" | jq .
     fi
   else
-    echo "Failed to remove song from playlist."
+    echo "Failed to remove meal from meal list."
     exit 1
   fi
 }
 
-remove_song_by_track_number() {
+remove_meal_by_track_number() {
   track_number=$1
 
   echo "Removing song by track number: $track_number..."
-  response=$(curl -s -X DELETE "$BASE_URL/remove-song-from-playlist-by-track-number/$track_number")
+  response=$(curl -s -X DELETE "$BASE_URL/remove-meal-from-list-by-track-number/$track_number")
 
   if echo "$response" | grep -q '"status":'; then
-    echo "Song removed from playlist by track number ($track_number) successfully."
+    echo "Song removed from meal list by track number ($track_number) successfully."
   else
-    echo "Failed to remove song from playlist by track number."
+    echo "Failed to remove meal from meal list by track number."
     exit 1
   fi
 }
@@ -200,178 +202,6 @@ clear_combatants() {
 }
 
 
-############################################################
-#
-# Play Playlist
-#
-############################################################
-
-play_current_song() {
-  echo "Playing current song..."
-  response=$(curl -s -X POST "$BASE_URL/play-current-song")
-
-  if echo "$response" | grep -q '"status": "success"'; then
-    echo "Current song is now playing."
-  else
-    echo "Failed to play current song."
-    exit 1
-  fi
-}
-
-rewind_playlist() {
-  echo "Rewinding playlist..."
-  response=$(curl -s -X POST "$BASE_URL/rewind-playlist")
-
-  if echo "$response" | grep -q '"status": "success"'; then
-    echo "Playlist rewound successfully."
-  else
-    echo "Failed to rewind playlist."
-    exit 1
-  fi
-}
-
-get_all_songs_from_playlist() {
-  echo "Retrieving all songs from playlist..."
-  response=$(curl -s -X GET "$BASE_URL/get-all-songs-from-playlist")
-
-  if echo "$response" | grep -q '"status": "success"'; then
-    echo "All songs retrieved successfully."
-    if [ "$ECHO_JSON" = true ]; then
-      echo "Songs JSON:"
-      echo "$response" | jq .
-    fi
-  else
-    echo "Failed to retrieve all songs from playlist."
-    exit 1
-  fi
-}
-
-get_song_from_playlist_by_track_number() {
-  track_number=$1
-  echo "Retrieving song by track number ($track_number)..."
-  response=$(curl -s -X GET "$BASE_URL/get-song-from-playlist-by-track-number/$track_number")
-
-  if echo "$response" | grep -q '"status": "success"'; then
-    echo "Song retrieved successfully by track number."
-    if [ "$ECHO_JSON" = true ]; then
-      echo "Song JSON:"
-      echo "$response" | jq .
-    fi
-  else
-    echo "Failed to retrieve song by track number."
-    exit 1
-  fi
-}
-
-get_current_song() {
-  echo "Retrieving current song..."
-  response=$(curl -s -X GET "$BASE_URL/get-current-song")
-
-  if echo "$response" | grep -q '"status": "success"'; then
-    echo "Current song retrieved successfully."
-    if [ "$ECHO_JSON" = true ]; then
-      echo "Current Song JSON:"
-      echo "$response" | jq .
-    fi
-  else
-    echo "Failed to retrieve current song."
-    exit 1
-  fi
-}
-
-get_playlist_length_duration() {
-  echo "Retrieving playlist length and duration..."
-  response=$(curl -s -X GET "$BASE_URL/get-playlist-length-duration")
-
-  if echo "$response" | grep -q '"status": "success"'; then
-    echo "Playlist length and duration retrieved successfully."
-    if [ "$ECHO_JSON" = true ]; then
-      echo "Playlist Info JSON:"
-      echo "$response" | jq .
-    fi
-  else
-    echo "Failed to retrieve playlist length and duration."
-    exit 1
-  fi
-}
-
-go_to_track_number() {
-  track_number=$1
-  echo "Going to track number ($track_number)..."
-  response=$(curl -s -X POST "$BASE_URL/go-to-track-number/$track_number")
-
-  if echo "$response" | grep -q '"status": "success"'; then
-    echo "Moved to track number ($track_number) successfully."
-  else
-    echo "Failed to move to track number ($track_number)."
-    exit 1
-  fi
-}
-
-play_entire_playlist() {
-  echo "Playing entire playlist..."
-  curl -s -X POST "$BASE_URL/play-entire-playlist" | grep -q '"status": "success"'
-  if [ $? -eq 0 ]; then
-    echo "Entire playlist played successfully."
-  else
-    echo "Failed to play entire playlist."
-    exit 1
-  fi
-}
-
-# Function to play the rest of the playlist
-play_rest_of_playlist() {
-  echo "Playing rest of the playlist..."
-  curl -s -X POST "$BASE_URL/play-rest-of-playlist" | grep -q '"status": "success"'
-  if [ $? -eq 0 ]; then
-    echo "Rest of playlist played successfully."
-  else
-    echo "Failed to play rest of playlist."
-    exit 1
-  fi
-}
-
-############################################################
-#
-# Arrange Playlist
-#
-############################################################
-
-move_song_to_beginning() {
-  meal=$1
-  cuisine=$2
-  price=$3
-
-  echo "Moving song ($meal - $cuisine, $price) to the beginning of the playlist..."
-  response=$(curl -s -X POST "$BASE_URL/move-song-to-beginning" \
-    -H "Content-Type: application/json" \
-    -d "{\"meal\": \"$meal\", \"cuisine\": \"$cuisine\", \"price\": $price}")
-
-  if echo "$response" | grep -q '"status": "success"'; then
-    echo "Song moved to the beginning successfully."
-  else
-    echo "Failed to move song to the beginning."
-    exit 1
-  fi
-}
-
-move_song_to_end() {
-  meal=$1
-  cuisine=$2
-  price=$3
-
-  echo "Moving song ($meal - $cuisine, $price) to the end of the playlist..."
-  response=$(curl -s -X POST "$BASE_URL/move-song-to-end" \
-    -H "Content-Type: application/json" \
-    -d "{\"meal\": \"$meal\", \"cuisine\": \"$cuisine\", \"price\": $price}")
-
-  if echo "$response" | grep -q '"status": "success"'; then
-    echo "Song moved to the end successfully."
-  else
-    echo "Failed to move song to the end."
-    exit 1
-  fi
-}
 
 move_song_to_track_number() {
   meal=$1
@@ -392,22 +222,6 @@ move_song_to_track_number() {
   fi
 }
 
-swap_songs_in_playlist() {
-  track_number1=$1
-  track_number2=$2
-
-  echo "Swapping songs at track numbers ($track_number1) and ($track_number2)..."
-  response=$(curl -s -X POST "$BASE_URL/swap-songs-in-playlist" \
-    -H "Content-Type: application/json" \
-    -d "{\"track_number_1\": $track_number1, \"track_number_2\": $track_number2}")
-
-  if echo "$response" | grep -q '"status": "success"'; then
-    echo "Songs swapped successfully between track numbers ($track_number1) and ($track_number2)."
-  else
-    echo "Failed to swap songs."
-    exit 1
-  fi
-}
 
 ######################################################
 #
@@ -416,20 +230,20 @@ swap_songs_in_playlist() {
 ######################################################
 
 # Function to get the song leaderboard sorted by play count
-get_song_leaderboard() {
-  echo "Getting song leaderboard sorted by play count..."
-  response=$(curl -s -X GET "$BASE_URL/song-leaderboard?sort=play_count")
+get_combat_leaderboard() {
+  echo "Getting combatant leaderboard sorted by play count..."
+  response=$(curl -s -X GET "$BASE_URL/song-combat?sort=score")
   if echo "$response" | grep -q '"status": "success"'; then
-    echo "Song leaderboard retrieved successfully."
+    echo "combatant leaderboard retrieved successfully."
     if [ "$ECHO_JSON" = true ]; then
       echo "Leaderboard JSON (sorted by play count):"
       echo "$response" | jq .
     fi
   else
-    echo "Failed to get song leaderboard."
+    echo "Failed to get combatant leaderboard."
     exit 1
   fi
-}
+}sm
 
 
 # Health checks
