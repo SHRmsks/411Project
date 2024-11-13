@@ -202,25 +202,14 @@ clear_combatants() {
 }
 
 
+get_combatants(){
+  echo "Getting combatants ..."
 
-move_song_to_track_number() {
-  meal=$1
-  cuisine=$2
-  price=$3
-  track_number=$4
 
-  echo "Moving song ($meal - $cuisine, $price) to track number ($track_number)..."
-  response=$(curl -s -X POST "$BASE_URL/move-song-to-track-number" \
-    -H "Content-Type: application/json" \
-    -d "{\"meal\": \"$meal\", \"cuisine\": \"$cuisine\", \"price\": $price, \"track_number\": $track_number}")
-
-  if echo "$response" | grep -q '"status": "success"'; then
-    echo "Song moved to track number ($track_number) successfully."
-  else
-    echo "Failed to move song to track number ($track_number)."
-    exit 1
-  fi
 }
+
+
+
 
 
 ######################################################
