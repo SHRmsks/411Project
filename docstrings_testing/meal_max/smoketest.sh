@@ -158,7 +158,7 @@ remove_meal_from_list() {
   cuisine=$2
   price=$3
 
-  echo "Removing song from playlist: $meal - $cuisine ($price)..."
+  echo "Removing meal from playlist: $meal - $cuisine ($price)..."
   response=$(curl -s -X DELETE "$BASE_URL/remove-meal-from-list" \
     -H "Content-Type: application/json" \
     -d "{\"id\":\"$id\",\"meal\":\"$meal\", \"cuisine\":\"$cuisine\", \"price\":$price}")
@@ -178,7 +178,7 @@ remove_meal_from_list() {
 remove_meal_by_track_number() {
   track_number=$1
 
-  echo "Removing song by track number: $track_number..."
+  echo "Removing meal by track number: $track_number..."
   response=$(curl -s -X DELETE "$BASE_URL/remove-meal-from-list-by-track-number/$track_number")
 
   if echo "$response" | grep -q '"status":'; then
@@ -204,7 +204,14 @@ clear_combatants() {
 
 get_combatants(){
   echo "Getting combatants ..."
+ response=$(curl -s -X POST "$BASE_URL/get-combatants")
 
+  if echo "$response" | grep -q '"status": "success"'; then
+    echo "Combatants fetched successfully."
+  else
+    echo "Failed to fetch combatants."
+    exit 1
+  fi
 
 }
 
