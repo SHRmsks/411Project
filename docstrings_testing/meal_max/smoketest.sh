@@ -239,7 +239,7 @@ get_combat_leaderboard() {
     echo "Failed to get combatant leaderboard."
     exit 1
   fi
-}sm
+}
 
 
 # Health checks
